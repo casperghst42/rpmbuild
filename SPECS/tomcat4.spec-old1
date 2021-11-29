@@ -1,0 +1,103 @@
+%define Destination	/usr/tomcat4
+
+Name:           jakarta-tomcat
+Version:        4.1.29
+Release:        1.fc1
+Summary:        Jakarta is a project of The Apache Software Foundation(ASF)
+
+Group:          System Environment/Daemons
+License:        The Apache Software License, Version 1.1
+URL:            http://jakarta.apache.org/
+Source0:        jakarta-tomcat-4.1.29.tar.gz 
+Source1:	tomcat4
+Source2:	findjava.sh	
+Patch0:		server.xml.diff
+BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+
+Requires:       mod_jk2 >= 2.0.2
+Requires:	httpd >= 2.0.47
+
+%description
+Tomcat is the servlet container that is used in the official Reference Implementation for the Java Servlet and JavaServer Pages technologies. The Java Servlet and JavaServer Pages specifications are developed by Sun under the Java Community Process.
+
+Tomcat is developed in an open and participatory environment and released under the Apache Software License. Tomcat is intended to be a collaboration of the best-of-breed developers from around the world. We invite you to participate in this open development project. 
+
+%prep
+rm -rf %{_builddir}/%{name}-%{version}
+%setup -q -n %{name}-%{version}
+mkdir -p %{buildroot}%{Destination}
+mkdir -p %{buildroot}%{Destination}/conf
+mkdir -p %{buildroot}/usr/share/doc/%{name}-%{version}
+mkdir -p %{buildroot}/etc/rc.d/init.d
+mkdir -p %{buildroot}/etc/tomcat4
+mkdir -p %{buildroot}/var/log/tomcat
+mkdir -p %{buildroot}/var/spool/tomcat4
+
+%build
+
+%install
+cp -ar bin                  %{buildroot}%{Destination}
+cp -ar common               %{buildroot}%{Destination}
+cp -ar conf                 %{buildroot}%{Destination}
+cp -ar conf/server.xml	    %{buildroot}%{Destination}/conf/server.xml.orig
+## moved to /var/log/tomcat - directory copied for apps. which 
+## are not asking tomcat for log directory.
+cp -ar logs                 %{buildroot}%{Destination}
+cp -ar server               %{buildroot}%{Destination}
+cp -ar shared               %{buildroot}%{Destination}
+cp -ar webapps              %{buildroot}%{Destination}
+cp -ar temp                 %{buildroot}%{Destination}
+cp -ar work                 %{buildroot}%{Destination}
+cp -a LICENSE               %{buildroot}/usr/share/doc/%{name}-%{version}
+cp -a README.txt            %{buildroot}/usr/share/doc/%{name}-%{version}
+cp -a RELEASE-NOTES-4.1.txt %{buildroot}/usr/share/doc/%{name}-%{version}
+cp -a RELEASE-PLAN-4.1.txt  %{buildroot}/usr/share/doc/%{name}-%{version}
+cp -a RUNNING.txt           %{buildroot}/usr/share/doc/%{name}-%{version}
+
+## Custom files
+cp -a  %{SOURCE1} %{buildroot}/etc/rc.d/init.d
+cp -a  %{SOURCE2} %{buildroot}%{Destination}/bin
+
+## Changes for log directory
+## Moving logfiles to /var/log/tomcat
+patch -p0 %{buildroot}%{Destination}/conf/server.xml < %{PATCH0}
+
+%clean
+rm -rf $RPM_BUILD_ROOT
+
+%post
+conffile="/etc/tomcat4/tomcat4.conf"
+if [ ! -r $conffile ]; then
+  echo "# Settings for Tomcat4" > $conffile
+  echo "CATALINA_HOME=/usr/tomcat4" >> $conffile
+  echo "CATALINA_TMPDIR=/var/spool/tomcat4" >> $conffile
+  echo "CATALINA_SCRIPT=%{Destination}/bin/catalina.sh" >> $conffile
+  echo "JAVA_HOME=$JAVA_HOME" >> $conffile
+  chown root:root $conffile 2>&1 > /dev/null
+  chmod 644 $conffile 2>&1 > /dev/null
+fi 
+
+chown root:root /etc/rc.d/init.d/tomcat4 2>&1 /dev/null
+chmod 744 /etc/rc.d/init.d/tomcat4 2>&1 > /dev/null
+
+chown root:root %{Destination}/bin/findjava.sh 2>&1 > /dev/null
+chmod 755 %{Destination}/bin/findjava.sh 2>&1 > /dev/null
+
+/sbin/chkconfig tomcat4 on
+
+%preun
+/sbin/chkconfig tomcat4 off
+
+%postun
+
+%files 
+%defattr(-,root,root,-)
+/usr
+/var/log/tomcat
+/var/spool
+/etc
+
+%changelog
+* Sat Jan 18 2004 Casper Pedersen <casper[AT]fedoranews.org> - 4.1.29-1
+- Initial RPM release.
+

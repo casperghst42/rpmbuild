@@ -1,0 +1,19 @@
+#!/bin/bash
+
+if [ -z $1 ] ; then
+	echo "$0 <name> <yum-dest>"
+	exit
+fi
+
+if [ ! -f $HOME/rpmbuild/RPMS/i386/$1.i386.rpm ] ; then
+	echo "$HOME/rpmbuild/RPMS/i386/$1.i386.rpm does not exit"
+	exit	
+fi
+
+DEST=/exports/disk2/linux/yum/$3
+BIN=$HOME/rpmbuild/RPMS/i386/$1.i386.rpm
+SRC=$HOME/rpmbuild/SRPMS/$1.src.rpm
+
+cp -v $BIN $DEST
+cp -v $SRC $DEST
+

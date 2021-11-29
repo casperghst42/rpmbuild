@@ -1,0 +1,46 @@
+Summary: A platform independent GUI for Apple's iPod
+Name: gtkpod
+Version: 0.50
+Release: 1
+License: GPL
+Group: Applications/Music
+URL: http://gtkpod.sourceforge.net/
+Source: http://prdownloads.sourceforge.net/gtkpod/gtkpod-%{version}.tar.gz
+BuildRoot: %{_tmppath}/%{name}-%{version}-root
+
+Requires: id3lib
+
+%description
+gtkpod is a platform independent GUI for Apple's iPod using GTK2. It allows you
+to upload songs and playlists to your iPod. It supports ID3 tag editing,
+multiple charsets for ID3 tags, detects duplicate songs, allows offline
+modification of the database with later synchronisation, and more.
+
+%prep
+%setup -q
+
+%build
+%configure
+make
+
+%install
+rm -rf %{buildroot}
+%makeinstall
+
+%post 
+
+%postun
+    
+%clean
+rm -rf %{buildroot}
+
+%files
+%defattr(-, root, root)
+%doc AUTHORS COPYING INSTALL NEWS README
+%{_bindir}/gtkpod
+/usr/share/locale/de/LC_MESSAGES/gtkpod.mo
+/usr/share/locale/ja/LC_MESSAGES/gtkpod.mo
+
+%changelog
+* Mon Mar 24 2003 Mike Gerber <mike@sprachgewalt.de> 0.50-1
+- Initial spec file

@@ -1,0 +1,93 @@
+# New macros
+%define plugins /mozilla/plugins
+
+Summary		: Adobe Acrobat Reader with Mozilla Plugin	
+Name		: acroread
+Version		: 5.0.10
+Release		: fdr
+Group		: Applications/Internet
+License		: Commercial 	
+Vendor		: Adobe Systems Incorporated
+URL  		: http://www.adobe.com/
+Packager	: Thomas Chung <tchung@linuxinstall.org>
+Source0		: linux-%{version}.tar.gz
+Source1		: acroread.patch1
+Source2		: acroread.patch2
+Source3         : acroread.desktop
+Source4         : acroread.png
+BuildRoot	: %{_tmppath}/%{name}-buildroot
+#Requires	: none
+#Obsoletes	: none
+#Conflicts	: none
+AutoReqProv     : no
+# Disables generating dependencies automatically
+
+%description
+Adobe Acrobat Reader is the free viewing companion to Adobe Acrobat 5.0.
+Acrobat Reader lets you view, navigate and print Portable Document Format (PDF)
+files. Adobe Acrobat 5.0 is a complete solution for creating, enhancing,
+reviewing, editing, and sharing information in PDF.
+
+%prep
+rm -rf %buildroot
+
+#######################################################################
+# %setup macro
+# -a num  : Only unpack source number after changing to the directory
+# -b num  : Only unpack source number before changing to the directory
+# -c      : Create directory before unpacking.
+# -D      : Do not delete the directory before unpacking
+# -n name : Name the directory as name
+# -q      : Run quiety with minimum output
+# -T      : Disable the automatic unpacking of the archives.
+#######################################################################
+%setup -c -q
+
+############################################
+# %{_sourcedir} : /usr/src/redhat/SOURCES
+# %{_builddir}  : /usr/src/redhat/BUILD
+# %{_tmppath}   : /var/tmp
+# %{_libdir}    : /usr/lib
+# %{_bindir}    : /usr/bin
+# %{_datadir}   : /usr/share
+# %{_mandir}    : /usr/man
+# %{buildroot}
+# %{name}
+# %{version}
+# %{release}
+# rpm --showrc for more info
+###########################################3
+%install
+install -d %buildroot%{_libdir}/acroread
+tar xpf LINUXRDR.TAR -C %buildroot%{_libdir}/acroread
+tar xpf COMMON.TAR -C %buildroot%{_libdir}/acroread
+install -d %buildroot%{_libdir}%{plugins}
+ln -s /usr/lib/acroread/Browsers/intellinux/nppdf.so %buildroot%{_libdir}%{plugins}
+patch %buildroot%{_libdir}/acroread/bin/acroread.sh < %{SOURCE1}
+# patch %buildroot%{_libdir}/acroread/Reader/intellinux/app-defaults/AcroRead < %{SOURCE2}
+install -d %buildroot%{_bindir}
+ln -s /usr/lib/acroread/bin/acroread.sh %buildroot%{_bindir}/acroread
+install -d %buildroot%{_datadir}/{applications,pixmaps}
+install -p -m644 %{SOURCE3} %buildroot%{_datadir}/applications
+install -p -m644 %{SOURCE4} %buildroot%{_datadir}/pixmaps
+
+%clean
+rm -rf %buildroot
+                                                                                                                        
+%files
+#####################################################
+# %defattr sets the default attributes for all files
+#####################################################
+%defattr(-,root,root)
+%doc README LICREAD.TXT
+%{_libdir}/acroread
+%{_libdir}%{plugins}/nppdf.so
+%{_bindir}/acroread
+%{_datadir}/applications/acroread.desktop
+%{_datadir}/pixmaps/acroread.png
+
+%changelog
+* Tue Jan 06 2004 Thomas Chung <tchung@linuxinstall.org> 5.0.8-fc1
+- Use built-in and custom macros
+- Patch LANG, install_dir and About Dialog Version
+- Add Gnome Menu
